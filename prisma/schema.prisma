@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MemberRole {
+  ADMIN
+  COMMERCIAL
+  OPERATOR
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum QuoteMode {
+  AUTOMATIC
+  EVALUATION
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  IN_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum ClientResponse {
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+model Organization {
+  id           String                   @id @default(cuid())
+  name         String
+  slug         String                   @unique
+  taxId        String?
+  email        String?
+  phone        String?
+  city         String?
+  address      String?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  memberships  OrganizationMembership[]
+  settings     CompanySettings?
+  quoteCounter QuoteCounter?
+  clients      Client[]
+  services     Service[]
+  quotes       Quote[]
+
+  @@index([createdAt])
+}
+
+model User {
+  id                 String                   @id @default(cuid())
+  name               String
+  email              String                   @unique
+  passwordHash       String
+  active             Boolean                  @default(true)
+  mustChangePassword Boolean                  @default(false)
+  createdAt          DateTime                 @default(now())
+  memberships        OrganizationMembership[]
+  createdQuotes      Quote[]                  @relation("QuoteCreator")
+  quoteHistory       QuoteHistory[]
+}
+
+model OrganizationMembership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole   @default(COMMERCIAL)
+  active         Boolean      @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model CompanySettings {
+  id                String       @id @default(cuid())
+  organizationId    String       @unique
+  currency          String       @default("COP")
+  taxRate           Decimal      @default(0) @db.Decimal(5, 2)
+  quoteValidityDays Int          @default(15)
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt         DateTime     @updatedAt
+}
+
+model QuoteCounter {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  nextNumber     Int          @default(1)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id             String       @id @default(cuid())
+  organizationId String
+  type           ClientType   @default(INDIVIDUAL)
+  name           String
+  document       String?
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  quotes         Quote[]
+
+  @@unique([organizationId, document])
+  @@index([organizationId, name])
+}
+
+model Service {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  category       String
+  description    String?
+  unit           String       @default("project")
+  basePrice      Decimal      @db.Decimal(14, 2)
+  estimatedHours Decimal?     @db.Decimal(8, 2)
+  quoteMode      QuoteMode    @default(EVALUATION)
+  isPublic       Boolean      @default(false)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  quoteItems     QuoteItem[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, active])
+}
+
+model Quote {
+  id              String         @id @default(cuid())
+  organizationId  String
+  clientId        String
+  createdById     String
+  number          Int
+  title           String
+  description     String?
+  location        String?
+  status          QuoteStatus    @default(DRAFT)
+  currency        String         @default("COP")
+  subtotal        Decimal        @db.Decimal(14, 2)
+  discount        Decimal        @default(0) @db.Decimal(14, 2)
+  taxRate         Decimal        @db.Decimal(5, 2)
+  taxAmount       Decimal        @db.Decimal(14, 2)
+  total           Decimal        @db.Decimal(14, 2)
+  internalCosts   Decimal        @default(0) @db.Decimal(14, 2)
+  estimatedProfit Decimal        @default(0) @db.Decimal(14, 2)
+  estimatedMargin Decimal        @default(0) @db.Decimal(20, 2)
+  validUntil      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  createdBy       User           @relation("QuoteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  items           QuoteItem[]
+  costs           QuoteCost[]
+  history         QuoteHistory[]
+  versions        QuoteVersion[]
+  currentVersion  Int            @default(0)
+  executionTime   String?
+  deliveryTime    String?
+  paymentTerms    String?
+  exclusions      String?
+  commercialNotes String?
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, clientId])
+}
+
+model QuoteItem {
+  id          String   @id @default(cuid())
+  quoteId     String
+  serviceId   String?
+  description String
+  unit        String
+  quantity    Decimal  @db.Decimal(12, 2)
+  unitPrice   Decimal  @db.Decimal(14, 2)
+  discount    Decimal  @default(0) @db.Decimal(14, 2)
+  lineTotal   Decimal  @db.Decimal(14, 2)
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  @@index([quoteId])
+}
+
+model QuoteCost {
+  id          String  @id @default(cuid())
+  quoteId     String
+  description String
+  amount      Decimal @db.Decimal(14, 2)
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+model QuoteHistory {
+  id         String       @id @default(cuid())
+  quoteId    String
+  userId     String?
+  actorLabel String?
+  fromStatus QuoteStatus?
+  toStatus   QuoteStatus
+  note       String?
+  createdAt  DateTime     @default(now())
+  quote      Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  user       User?        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([quoteId, createdAt])
+}
+
+model QuoteVersion {
+  id             String          @id @default(cuid())
+  quoteId        String
+  version        Int
+  snapshot       Json
+  tokenHash      String          @unique
+  tokenExpiresAt DateTime
+  response       ClientResponse?
+  responseNote   String?
+  respondedAt    DateTime?
+  publishedAt    DateTime        @default(now())
+  quote          Quote           @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, version])
+  @@index([quoteId, publishedAt])
+  @@index([tokenExpiresAt])
+}

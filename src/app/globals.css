@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f5f7fa;
+  --foreground: #172338;
+  --muted: #64748b;
+  --line: #e4e9f0;
+  --navy: #13243a;
+  --blue: #2874d0;
+  --teal: #35c0aa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #73b3ff;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #d7edff;
+}
