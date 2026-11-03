@@ -5,14 +5,17 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start --port 3001",
+    "start": "next start",
+    "start:local": "next start --port 3001",
     "lint": "eslint",
     "test": "vitest run",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
     "db:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
     "db:seed": "node --env-file=.env prisma/seed.mjs",
-    "db:seed-services": "node --env-file=.env prisma/seed-services.mjs"
+    "db:seed:hosted": "node prisma/seed.mjs",
+    "db:seed-services": "node --env-file=.env prisma/seed-services.mjs",
+    "db:seed-services:hosted": "node prisma/seed-services.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

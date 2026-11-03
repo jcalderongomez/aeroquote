@@ -92,7 +92,23 @@ El correo de propuestas se comparte manualmente; no hay proveedor de email integ
 
 ## Despliegue
 
-Despliega `front/` y `back/` como servicios separados. Configura la URL pública HTTPS del frontend en `AUTH_URL` y `APP_URL` del backend, un `BACKEND_URL` accesible desde el servidor frontend, el mismo `AUTH_SECRET` en ambos proyectos y `DATABASE_URL` solo en el backend. Aplica las migraciones en producción con:
+### Demo gratuita con Render y Neon
+
+El archivo `render.yaml` configura `front/` y `back/` como servicios web gratuitos en Render (región Ohio), comparte un `AUTH_SECRET` generado por Render y conecta automáticamente sus URLs públicas. El backend aplica las migraciones y carga el administrador inicial y el catálogo de muestra al iniciar. Los comandos de carga son idempotentes.
+
+1. Crea una cuenta y un proyecto gratuito en [Neon](https://neon.tech/), seleccionando AWS US East (Ohio, `aws-us-east-2`) para acercar la base de datos a Render.
+2. Copia la cadena de conexión directa de PostgreSQL (sin `-pooler`) y conserva `sslmode=require`.
+3. En [Render](https://render.com/), crea un Blueprint desde este repositorio de GitHub y confirma los servicios definidos en `render.yaml`.
+4. Cuando Render solicite valores, agrega la cadena de Neon en `DATABASE_URL`, la URL HTTPS pública de `aeroquote-front` en `AUTH_URL` y `APP_URL`, un correo para `INITIAL_ADMIN_EMAIL` y una contraseña única de al menos 12 caracteres en `INITIAL_ADMIN_PASSWORD`. Render generará y compartirá `AUTH_SECRET`; no lo reemplaces por un valor público ni lo subas a Git. `BACKEND_URL` se enlaza automáticamente a la URL pública del backend.
+5. Espera a que los dos servicios indiquen estado `Live`. Abre la URL pública de `aeroquote-front` e inicia sesión con el correo y la contraseña de administrador configurados. La cuenta exigirá cambiar la contraseña en el primer acceso.
+
+Este despliegue inicia con una base vacía: no copia datos locales. La carga inicial agrega una organización y servicios de muestra con tarifas en COP 0; configura los precios antes de emitir cotizaciones. Guarda aparte la cadena de conexión y las credenciales de administración, y prepara respaldos antes de cargar información real.
+
+Los planes gratuitos son para demos: Render duerme los servicios tras 15 minutos sin tráfico y el siguiente acceso puede tardar cerca de un minuto. Render indica que sus instancias gratuitas no son para producción; Neon también suspende la base tras inactividad y aplica límites de uso. Verifica sus condiciones vigentes antes de depender del sistema comercialmente.
+
+### Despliegue manual
+
+Despliega `front/` y `back/` como servicios separados. Configura `AUTH_URL` del backend y `APP_URL` con la URL pública HTTPS del frontend, un `BACKEND_URL` accesible desde el servidor frontend, el mismo `AUTH_SECRET` en ambos proyectos, `AUTH_TRUST_HOST=true` en el frontend y `DATABASE_URL` solo en el backend. Aplica las migraciones con:
 
 ```bash
 npm run db:deploy

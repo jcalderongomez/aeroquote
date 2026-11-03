@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PasswordInput } from "@/components/password-input";
 
 export function PasswordChangeForm() {
   const router = useRouter();
@@ -41,11 +42,11 @@ export function PasswordChangeForm() {
     <form action={submit} className="space-y-4">
       <label className="block text-xs font-semibold text-slate-600">
         Contraseña actual
-        <input name="currentPassword" type="password" autoComplete="current-password" required className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+        <PasswordInput name="currentPassword" aria-label="Contraseña actual" autoComplete="current-password" required className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
       </label>
       <label className="block text-xs font-semibold text-slate-600">
         Contraseña nueva
-        <input name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+        <PasswordInput name="newPassword" aria-label="Contraseña nueva" autoComplete="new-password" minLength={12} maxLength={128} required className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
       </label>
       {message && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
       <button disabled={pending} className="w-full rounded-lg bg-[#1769c2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1259a8] disabled:opacity-60">

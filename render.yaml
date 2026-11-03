@@ -1,0 +1,59 @@
+envVarGroups:
+  - name: aeroquote-auth
+    envVars:
+      - key: AUTH_SECRET
+        generateValue: true
+
+services:
+  - type: web
+    name: aeroquote-front
+    runtime: node
+    region: ohio
+    plan: free
+    buildCommand: npm install && npm run build --workspace @aeroquote/front
+    startCommand: npm run start --workspace @aeroquote/front
+    healthCheckPath: /login
+    envVars:
+      - fromGroup: aeroquote-auth
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      - key: NODE_VERSION
+        value: "22.12.0"
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: aeroquote-back
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: aeroquote-back
+    runtime: node
+    region: ohio
+    plan: free
+    buildCommand: npm install && npm run db:generate --workspace @aeroquote/back && npm run build --workspace @aeroquote/back
+    startCommand: >-
+      npm run db:deploy --workspace @aeroquote/back &&
+      npm run db:seed:hosted --workspace @aeroquote/back &&
+      npm run db:seed-services:hosted --workspace @aeroquote/back &&
+      npm run start --workspace @aeroquote/back
+    healthCheckPath: /api/health
+    envVars:
+      - fromGroup: aeroquote-auth
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NODE_VERSION
+        value: "22.12.0"
+      - key: ORGANIZATION_NAME
+        value: AEROQUOTE
+      - key: ORGANIZATION_SLUG
+        value: aeroquote-demo
+      - key: INITIAL_ADMIN_NAME
+        value: Administrador
+      - key: INITIAL_ADMIN_EMAIL
+        sync: false
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
