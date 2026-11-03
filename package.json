@@ -2,38 +2,20 @@
   "name": "aeroquote",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "front",
+    "back"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "node --env-file=.env prisma/seed.mjs",
-    "db:seed-services": "node --env-file=.env prisma/seed-services.mjs"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "bcryptjs": "^3.0.3",
-    "decimal.js": "^10.6.0",
-    "next": "16.4.4",
-    "next-auth": "^5.0.0-beta.32",
-    "pdf-lib": "^1.17.1",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "zod": "^4.6.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.4",
-    "prisma": "^6.19.3",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^4.1.12"
+    "dev:front": "npm run dev --workspace @aeroquote/front",
+    "dev:back": "npm run dev --workspace @aeroquote/back",
+    "build": "npm run db:generate && npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace @aeroquote/back",
+    "db:generate": "npm run db:generate --workspace @aeroquote/back",
+    "db:migrate": "npm run db:migrate --workspace @aeroquote/back",
+    "db:deploy": "npm run db:deploy --workspace @aeroquote/back",
+    "db:seed": "npm run db:seed --workspace @aeroquote/back",
+    "db:seed-services": "npm run db:seed-services --workspace @aeroquote/back"
   }
 }
